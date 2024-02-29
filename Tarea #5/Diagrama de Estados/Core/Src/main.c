@@ -31,7 +31,45 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define lim1 10
+#define lim2 50
+volatile int limit = lim2;
+//USOS DEL PROGRAMA DE LA M�?QUINA DE ESTADO
+#define ESTADO_ERROR        0
+#define ESTADO_ABIERTO      1
+#define ESTADO_CERRADO      2
+#define ESTADO_ABRIENDO     3
+#define ESTADO_CERRANDO     4
+#define ESTADO_INTERMEDIO   5
+#define ESTADO_INIT         6
+#define FALSE               0
+#define TRUE                1
+#define inTrue              0
+#define inFalse             1
+#define TIME_Ca             60
 
+int Func_ESTADO_ERROR(void);
+int Func_ESTADO_ABIERTO(void);
+int Func_ESTADO_CERRADO(void);
+int Func_ESTADO_ABRIENDO(void);
+int Func_ESTADO_CERRANDO(void);
+int Func_ESTADO_INTERMEDIO(void);
+int Func_ESTADO_INIT(void);
+
+volatile int ESTADO_ANTERIOR = ESTADO_INIT;
+volatile int ESTADO_ACTUAL = ESTADO_INIT;
+volatile int ESTADO_SIGUIENTE = ESTADO_INIT;
+volatile int contador = 0;
+
+volatile struct INOUT {
+    unsigned int Sc:1;
+    unsigned int Sa:1;
+    unsigned int Mc:1;
+    unsigned int Ma:1;
+    unsigned int Bc:1;
+    unsigned int Ba:1;
+    unsigned int Led:1;
+} inout;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -40,8 +78,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart2;
+TIM_HandleTypeDef htim2;
 
+UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -49,13 +88,14 @@ UART_HandleTypeDef huart2;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
 
 /* USER CODE END 0 */
 
@@ -86,16 +126,48 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_USART2_UART_Init();
-  /* USER CODE BEGIN 2 */
-
-  /* USER CODE END 2 */
+   MX_GPIO_Init();
+   MX_USART2_UART_Init();
+   MX_TIM2_Init();
+   /* USER CODE BEGIN 2 */
+   HAL_TIM_Base_Start_IT(&htim2);
+   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  	 /* HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 1);
+	  	  HAL_Delay(delay);
+	  	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 0);
+	  	  HAL_Delay(delay);*/
+	  if (ESTADO_SIGUIENTE == ESTADO_INIT) {
+	      ESTADO_SIGUIENTE = Func_ESTADO_INIT();
+	  }
+
+	  if (ESTADO_SIGUIENTE == ESTADO_ABIERTO) {
+	      ESTADO_SIGUIENTE = Func_ESTADO_ABIERTO();
+	  }
+
+	  if (ESTADO_SIGUIENTE == ESTADO_CERRADO) {
+	      ESTADO_SIGUIENTE = Func_ESTADO_CERRADO();
+	  }
+
+	  if (ESTADO_SIGUIENTE == ESTADO_ABRIENDO) {
+	      ESTADO_SIGUIENTE = Func_ESTADO_ABRIENDO();
+	  }
+
+	  if (ESTADO_SIGUIENTE == ESTADO_CERRANDO) {
+	      ESTADO_SIGUIENTE = Func_ESTADO_CERRANDO();
+	  }
+
+	  if (ESTADO_SIGUIENTE == ESTADO_INTERMEDIO) {
+	      ESTADO_SIGUIENTE = Func_ESTADO_INTERMEDIO();
+	  }
+
+	  if (ESTADO_SIGUIENTE == ESTADO_ERROR) {
+	      ESTADO_SIGUIENTE = Func_ESTADO_ERROR();
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -153,37 +225,48 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief USART2 Initialization Function
+  * @brief TIM2 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART2_UART_Init(void)
+static void MX_TIM2_Init(void)
 {
 
-  /* USER CODE BEGIN USART2_Init 0 */
+  /* USER CODE BEGIN TIM2_Init 0 */
 
-  /* USER CODE END USART2_Init 0 */
+  /* USER CODE END TIM2_Init 0 */
 
-  /* USER CODE BEGIN USART2_Init 1 */
+	  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+	  TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-  /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 80-1;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 10000;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART2_Init 2 */
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
 
-  /* USER CODE END USART2_Init 2 */
+  /* USER CODE END TIM2_Init 2 */
 
 }
 
@@ -205,13 +288,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin|MCA9_Pin|MA_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  /*Configure GPIO pin : MC_Pin */
+  GPIO_InitStruct.Pin = MC_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(MC_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
@@ -220,12 +303,235 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : BA_Pin BC_Pin */
+  GPIO_InitStruct.Pin = BA_Pin|BC_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : MCA9_Pin MA_Pin */
+  GPIO_InitStruct.Pin = MCA9_Pin|MA_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : SA_Pin SC_Pin */
+  GPIO_InitStruct.Pin = SA_Pin|SC_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim2)
+{
+  /* Prevent unused argument(s) compilation warning */
+	/*contador++;
+if(contador == limit)
+{
+// HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+ contador = 0;
+}*/
+  /* NOTE : This function should not be modified, when the callback is needed,
+            the HAL_TIM_PeriodElapsedHalfCpltCallback could be implemented in the user file
+   */
+	static int cont_int = 0;
 
+	// Condición para reiniciar contador
+	if (cont_int == lim1) {
+	    contador++;
+	    cont_int = 0;
+	}
+
+	// Control del LED
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, inout.Led);
+
+	// Control del botón cerrar
+	if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7) == TRUE) {
+	    inout.Bc = TRUE;
+	} else {
+	    inout.Bc = FALSE;
+	}
+
+	// Control del botón abrir
+	if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_6) == TRUE) {
+	    inout.Ba = TRUE;
+	} else {
+	    inout.Ba = FALSE;
+	}
+
+	// Control del sensor cerrado
+	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5) == TRUE) {
+	    inout.Sc = TRUE;
+	} else {
+	    inout.Sc = FALSE;
+	}
+
+	// Control del sensor abierto
+	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == TRUE) {
+	    inout.Sa = TRUE;
+	} else {
+	    inout.Sa = FALSE;
+	}
+
+	// Control del motor abrir
+	if (inout.Ma == TRUE) {
+	    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 1);
+	} else {
+	    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 0);
+	}
+
+	// Control del motor cerrar
+	if (inout.Mc == TRUE) {
+	    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, 1);
+	} else {
+	    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, 0);
+	}
+
+	// Incremento del contador
+	cont_int++;
+}
+/*
+void cambio_de_valor(int *variable)
+{
+	static int status = 0;
+	if(*variable <= 1000 && status == 0)
+	{
+		*variable = *variable + lim1;
+		status = 1;
+	}
+	else
+	{
+		*variable = lim1;
+		status = 0;
+	}
+}
+*/
+/*
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+
+  if (GPIO_Pin == B1_Pin)
+  {
+	  //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+  }
+
+}*/
+int Func_ESTADO_ERROR(void) {
+    for (;;) {
+        inout.Led = TRUE;
+    }
+}
+
+int Func_ESTADO_ABIERTO(void) {
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_ABIERTO;
+    inout.Ma = FALSE;
+    inout.Mc = FALSE;
+    inout.Led = 1;
+    contador = 0; // reset de contador
+
+    for (;;) {
+        if ((contador > TIME_Ca - 1) || (inout.Bc == TRUE)) {
+            return ESTADO_CERRANDO;
+        }
+    }
+}
+
+int Func_ESTADO_CERRADO(void) {
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_CERRADO;
+    inout.Mc = 0;
+    inout.Ma = 0;
+    inout.Led = 1;
+
+    for (;;) {
+        if (inout.Ba == TRUE) {
+            return ESTADO_ABRIENDO;
+        }
+    }
+}
+
+int Func_ESTADO_ABRIENDO(void) {
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_ABRIENDO;
+    inout.Led = FALSE;
+    inout.Mc = FALSE;
+    inout.Ma = TRUE;
+
+    for (;;) {
+        if (inout.Sa == TRUE) {
+            return ESTADO_ABIERTO;
+        } else if (inout.Bc == TRUE) {
+            return ESTADO_CERRANDO;
+        }
+    }
+}
+
+int Func_ESTADO_CERRANDO(void) {
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_CERRANDO;
+    inout.Mc = TRUE;
+    inout.Ma = FALSE;
+    inout.Led = FALSE;
+
+    for (;;) {
+        if (inout.Sc == TRUE) {
+            return ESTADO_CERRADO;
+        } else if (inout.Ba == TRUE) {
+            return ESTADO_ABRIENDO;
+        }
+    }
+}
+
+int Func_ESTADO_INTERMEDIO(void) {
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_INTERMEDIO;
+    inout.Mc = FALSE;
+    inout.Ma = 0;
+    inout.Led = TRUE;
+
+    for (;;) {
+        if (inout.Ba == TRUE) {
+            return ESTADO_ABRIENDO;
+        }
+
+        if (inout.Bc == TRUE) {
+            return ESTADO_CERRANDO;
+        }
+    }
+}
+
+int Func_ESTADO_INIT(void) {
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_INIT;
+    inout.Led = 1;
+    inout.Ma = FALSE;
+    inout.Mc = FALSE;
+
+    for (;;) {
+        if ((inout.Sa == 1) && (inout.Sc == 1)) {
+            return ESTADO_ERROR;
+        }
+
+        if ((inout.Sa == 1) && (inout.Sc == 0)) {
+            return ESTADO_ABIERTO;
+        }
+
+        if ((inout.Sc == 1) && (inout.Sa == 0)) {
+            return ESTADO_CERRADO;
+        }
+
+        if ((inout.Sa == 0) && (inout.Sc == 0)) {
+            return ESTADO_INTERMEDIO;
+        }
+    }
+}
 /* USER CODE END 4 */
 
 /**
