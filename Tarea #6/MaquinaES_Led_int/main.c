@@ -32,6 +32,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+/* USER CODE BEGIN PD */
 #define ESTADO_ERROR        0
 #define ESTADO_ABIERTO      1
 #define ESTADO_CERRADO      2
@@ -67,12 +68,6 @@ volatile int ESTADO_ANTERIOR = ESTADO_INIT;
 volatile int ESTADO_ACTUAL = ESTADO_INIT;
 volatile int ESTADO_SIGUIENTE = ESTADO_INIT;
 volatile int CntTimeCa = 0;//contador de un segundo
-volatile struct LEDS
-{
-	unsigned int StatusLED: 1;
-	unsigned int InterLED;
-}LedStatus;
-
 volatile struct INOUT
 {
     unsigned int Sc:1;
@@ -83,6 +78,11 @@ volatile struct INOUT
     unsigned int Ba:1;
     unsigned int Led:1;
 } inout;
+volatile struct LEDS
+{
+	unsigned int StatusLED: 1;
+	unsigned int InterLED;
+}LedStatus;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -491,6 +491,7 @@ int Func_ESTADO_SETTINGLED(int St, int Inter)
 	return 0;
 }
 
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	CntTimeCa++;
@@ -547,13 +548,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			    {
 			    	    		if(cont_LED >= LedStatus.InterLED)
 			    	    		{
-			    	    			if(HAL_GPIO_ReadPin(LD2_GPIO_Port,LD2_Pin) == LED_ON)
+			    	    			if(HAL_GPIO_ReadPin(LD2_GPIO_Port, LD2_Pin) == LED_ON)
 			    	    			{
-			    	    				HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin, FALSE);
+			    	    				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, FALSE);
 			    	    			}
 			    	    			else
 			    	    			{
-			    	    				HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin, TRUE);
+			    	    				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, TRUE);
 			    	    			}
 			    	    			cont_LED = 0;
 			    	    		}
@@ -561,7 +562,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			    	    else
 			    	    {
 			    	    	cont_LED = 0;
-			    	    	HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin, FALSE);
+			    	    	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, FALSE);
 			    	    }
 
 }
