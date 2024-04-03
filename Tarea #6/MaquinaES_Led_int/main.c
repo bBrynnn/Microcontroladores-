@@ -46,10 +46,10 @@
 #define TIME_Ca             60
 #define LED_ON    			1
 #define LED_OFF   			0
-#define INTER_ON  			1
+#define INTER_ON  			1  //Intermitente
 #define INTER_OFF 			0
-#define INTER_RAPIDO 		25 //Rapido multiplo de 10ms
-#define INTER_LENTO  		50 //Lento multiplo de 10ms
+#define INTER_RAPIDO 		25 //Definicion del tiempo rapido multiplo de 10ms
+#define INTER_LENTO  		50 //Definicion del tiempo lento multiplo de 10ms
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -67,6 +67,12 @@ volatile int ESTADO_ANTERIOR = ESTADO_INIT;
 volatile int ESTADO_ACTUAL = ESTADO_INIT;
 volatile int ESTADO_SIGUIENTE = ESTADO_INIT;
 volatile int CntTimeCa = 0;//contador de un segundo
+volatile struct LEDS
+{
+	unsigned int StatusLED: 1;
+	unsigned int InterLED;
+}LedStatus;
+
 volatile struct INOUT
 {
     unsigned int Sc:1;
@@ -77,11 +83,6 @@ volatile struct INOUT
     unsigned int Ba:1;
     unsigned int Led:1;
 } inout;
-volatile struct LEDS
-{
-	unsigned int StatusLED: 1;
-	unsigned int InterLED;
-}LedStatus;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,13 +91,13 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
-int Func_ESTADO_INIT(void);
-int Func_ESTADO_ABRIENDO(void);
-int Func_ESTADO_ABIERTO(void);
-int Func_ESTADO_INTERMEDIO(void);
-int Func_ESTADO_CERRANDO(void);
-int Func_ESTADO_CERRADO(void);
 int Func_ESTADO_ERROR(void);
+int Func_ESTADO_ABIERTO(void);
+int Func_ESTADO_CERRADO(void);
+int Func_ESTADO_ABRIENDO(void);
+int Func_ESTADO_CERRANDO(void);
+int Func_ESTADO_INTERMEDIO(void);
+int Func_ESTADO_INIT(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -110,6 +111,7 @@ int Func_ESTADO_ERROR(void);
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -135,48 +137,48 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-//  HAL_TIM_Base_Start_IT(&htim2);
+  HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      // Verifica el estado siguiente y realiza la transición de estados según corresponda
-      if (ESTADO_SIGUIENTE == ESTADO_INIT)
-      {
-          ESTADO_SIGUIENTE = Func_ESTADO_INIT();
-      }
 
-      if (ESTADO_SIGUIENTE == ESTADO_ABIERTO)
-      {
-          ESTADO_SIGUIENTE = Func_ESTADO_ABIERTO();
-      }
+	  if(ESTADO_SIGUIENTE == ESTADO_INIT)
+	          {
+	              ESTADO_SIGUIENTE = Func_ESTADO_INIT();
+	          }
 
-      if (ESTADO_SIGUIENTE == ESTADO_CERRADO)
-      {
-          ESTADO_SIGUIENTE = Func_ESTADO_CERRADO();
-      }
+	          if(ESTADO_SIGUIENTE == ESTADO_ABIERTO)
+	          {
+	              ESTADO_SIGUIENTE = Func_ESTADO_ABIERTO();
+	          }
 
-      if (ESTADO_SIGUIENTE == ESTADO_ABRIENDO)
-      {
-          ESTADO_SIGUIENTE = Func_ESTADO_ABRIENDO();
-      }
+	          if(ESTADO_SIGUIENTE == ESTADO_CERRADO)
+	          {
+	              ESTADO_SIGUIENTE = Func_ESTADO_CERRADO();
+	          }
 
-      if (ESTADO_SIGUIENTE == ESTADO_CERRANDO)
-      {
-          ESTADO_SIGUIENTE = Func_ESTADO_CERRANDO();
-      }
+	          if(ESTADO_SIGUIENTE == ESTADO_ABRIENDO)
+	          {
+	              ESTADO_SIGUIENTE = Func_ESTADO_ABRIENDO();
+	          }
 
-      if (ESTADO_SIGUIENTE == ESTADO_INTERMEDIO)
-      {
-          ESTADO_SIGUIENTE = Func_ESTADO_INTERMEDIO();
-      }
+	          if(ESTADO_SIGUIENTE == ESTADO_CERRANDO)
+	          {
+	              ESTADO_SIGUIENTE = Func_ESTADO_CERRANDO();
+	          }
 
-      if (ESTADO_SIGUIENTE == ESTADO_ERROR)
-      {
-          ESTADO_SIGUIENTE = Func_ESTADO_ERROR();
-      }
+	          if(ESTADO_SIGUIENTE == ESTADO_INTERMEDIO)
+	          {
+	              ESTADO_SIGUIENTE = Func_ESTADO_INTERMEDIO();
+	          }
+
+	          if(ESTADO_SIGUIENTE == ESTADO_ERROR)
+	          {
+	              ESTADO_SIGUIENTE = Func_ESTADO_ERROR();
+	          }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -252,9 +254,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 0;
+  htim2.Init.Prescaler = 80;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 4294967295;
+  htim2.Init.Period = 90000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -331,10 +333,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin|Mc_Pin|Ma_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, Ma_Pin|Mc_Pin|Led_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(Led_GPIO_Port, Led_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -342,204 +344,226 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
+  /*Configure GPIO pins : LD2_Pin Mc_Pin Ma_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin|Mc_Pin|Ma_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Ba_Pin Bc_Pin Sa_Pin Sc_Pin */
-  GPIO_InitStruct.Pin = Ba_Pin|Bc_Pin|Sa_Pin|Sc_Pin;
+  /*Configure GPIO pins : Sc_Pin Bc_Pin Sa_Pin Ba_Pin */
+  GPIO_InitStruct.Pin = Sc_Pin|Bc_Pin|Sa_Pin|Ba_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Ma_Pin Mc_Pin Led_Pin */
-  GPIO_InitStruct.Pin = Ma_Pin|Mc_Pin|Led_Pin;
+  /*Configure GPIO pin : Led_Pin */
+  GPIO_InitStruct.Pin = Led_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(Led_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
-// Función para manejar el estado de error
 int Func_ESTADO_ERROR(void)
 {
-    // Se enciende el LED indefinidamente en caso de error
     for(;;)
     {
-        inout.Led = TRUE;  // Se activa el LED
+        inout.Led = TRUE;
     }
 }
-
-// Función para manejar el estado abierto
 int Func_ESTADO_ABIERTO(void)
 {
-    ESTADO_ANTERIOR = ESTADO_ACTUAL;  // Se guarda el estado anterior
-    ESTADO_ACTUAL = ESTADO_ABIERTO;   // Se actualiza el estado actual
-    inout.Ma = FALSE;                  // Se desactiva la señal de apertura de la puerta
-    inout.Mc = FALSE;                  // Se desactiva la señal de cierre de la puerta
-    Func_ESTADO_SETTINGLED(LED_ON, INTER_RAPIDO); // Configura el LED
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_ABIERTO;
+    inout.Ma = FALSE;
+    inout.Mc = FALSE;
+    Func_ESTADO_SETTINGLED(LED_ON, INTER_RAPIDO);
     for(;;)
     {
-        if(inout.Bc == TRUE)  // Si se activa la señal de cierre de la puerta
+        if(inout.Bc == TRUE)
         {
-            return ESTADO_CERRANDO;  // Se cambia al estado de cerrando
+            return ESTADO_CERRANDO;
         }
     }
 }
-
-// Función para manejar el estado cerrado
 int Func_ESTADO_CERRADO(void)
 {
-    ESTADO_ANTERIOR = ESTADO_ACTUAL;  // Se guarda el estado anterior
-    ESTADO_ACTUAL = ESTADO_CERRADO;   // Se actualiza el estado actual
-    inout.Mc = FALSE;                  // Se desactiva la señal de cierre de la puerta
-    inout.Ma = FALSE;                  // Se desactiva la señal de apertura de la puerta
-    Func_ESTADO_SETTINGLED(LED_OFF, INTER_OFF);  // Configura el LED
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_CERRADO;
+    inout.Mc = FALSE;
+    inout.Ma = FALSE;
+    Func_ESTADO_SETTINGLED(LED_OFF, INTER_OFF);
     for(;;)
     {
-        if(inout.Ba == TRUE)  // Si se activa la señal de apertura de la puerta
+        if(inout.Ba == TRUE)
         {
-            return ESTADO_ABRIENDO;  // Se cambia al estado de abriendo
+            return ESTADO_ABRIENDO;
         }
     }
-}
 
-// Función para manejar el estado de abriendo
+}
 int Func_ESTADO_ABRIENDO(void)
 {
-    ESTADO_ANTERIOR = ESTADO_ACTUAL;  // Se guarda el estado anterior
-    ESTADO_ACTUAL = ESTADO_ABRIENDO;  // Se actualiza el estado actual
-    inout.Mc = FALSE;                  // Se desactiva la señal de cierre de la puerta
-    inout.Ma = TRUE;                   // Se activa la señal de apertura de la puerta
-    Func_ESTADO_SETTINGLED(LED_ON, INTER_LENTO); // Configura el LED
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_ABRIENDO;
+    inout.Mc = FALSE;
+    inout.Ma = TRUE;
+    Func_ESTADO_SETTINGLED(LED_ON, INTER_LENTO);
     for(;;)
     {
-        if(inout.Sa == TRUE)  // Si se detecta que la puerta está abierta
+        if(inout.Sa == TRUE)
         {
-            return ESTADO_ABIERTO;  // Se cambia al estado de abierto
+            return ESTADO_ABIERTO;
         }
     }
 }
-
-// Función para manejar el estado de cerrando
 int Func_ESTADO_CERRANDO(void)
 {
-    ESTADO_ANTERIOR = ESTADO_ACTUAL;  // Se guarda el estado anterior
-    ESTADO_ACTUAL = ESTADO_CERRANDO;  // Se actualiza el estado actual
-    inout.Mc = TRUE;                   // Se activa la señal de cierre de la puerta
-    inout.Ma = FALSE;                  // Se desactiva la señal de apertura de la puerta
-    Func_ESTADO_SETTINGLED(LED_ON, INTER_LENTO); // Configura el LED
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_CERRANDO;
+    inout.Mc = TRUE;
+    inout.Ma = FALSE;
+    Func_ESTADO_SETTINGLED(LED_ON, INTER_LENTO);
     for(;;)
     {
-        if(inout.Sc == TRUE)  // Si se detecta que la puerta está cerrada
+        if(inout.Sc == TRUE)
         {
-            return ESTADO_CERRADO;  // Se cambia al estado de cerrado
+            return ESTADO_CERRADO;
         }
     }
 }
-
-// Función para manejar el estado intermedio
 int Func_ESTADO_INTERMEDIO(void)
 {
-    ESTADO_ANTERIOR = ESTADO_ACTUAL;  // Se guarda el estado anterior
-    ESTADO_ACTUAL = ESTADO_INTERMEDIO; // Se actualiza el estado actual
-    inout.Ma = FALSE;                  // Se desactiva la señal de apertura de la puerta
-    inout.Mc = FALSE;                  // Se desactiva la señal de cierre de la puerta
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_INTERMEDIO;
+    inout.Ma = FALSE;
+    inout.Mc = FALSE;
     for(;;)
     {
-        if(inout.Ba == TRUE)  // Si se activa la señal de apertura de la puerta
+        if(inout.Ba == TRUE)
         {
-            return ESTADO_ABRIENDO;  // Se cambia al estado de abriendo
+            return ESTADO_ABRIENDO;
         }
-        if(inout.Bc == TRUE)  // Si se activa la señal de cierre de la puerta
+        if(inout.Bc == TRUE)
         {
-            return ESTADO_CERRANDO;  // Se cambia al estado de cerrando
+            return ESTADO_CERRANDO;
         }
     }
 }
-
-// Función para inicializar el sistema
 int Func_ESTADO_INIT(void)
 {
-    ESTADO_ANTERIOR = ESTADO_ACTUAL;  // Se guarda el estado anterior
-    ESTADO_ACTUAL = ESTADO_INIT;      // Se actualiza el estado actual
-    inout.Ma = FALSE;                  // Se desactiva la señal de apertura de la puerta
-    inout.Mc = FALSE;                  // Se desactiva la señal de cierre de la puerta
+    ESTADO_ANTERIOR = ESTADO_ACTUAL;
+    ESTADO_ACTUAL = ESTADO_INIT;
+    inout.Ma = FALSE;
+    inout.Mc = FALSE;
     for(;;)
     {
-        if((inout.Sa == TRUE) && (inout.Sc == TRUE)) // Si la puerta está tanto abierta como cerrada
+        if((inout.Sa == TRUE) && (inout.Sc == TRUE))
         {
-            return ESTADO_ERROR;  // Se cambia al estado de error
+            return ESTADO_ERROR;
         }
 
-        if(inout.Sa == TRUE)  // Si se detecta que la puerta está abierta
+        if(inout.Sa == TRUE)
         {
-            return ESTADO_ABIERTO;  // Se cambia al estado de abierto
+            return ESTADO_ABIERTO;
         }
 
-        if(inout.Sc == TRUE)  // Si se detecta que la puerta está cerrada
+        if(inout.Sc == TRUE)
         {
-            return ESTADO_CERRADO;  // Se cambia al estado de cerrado
+            return ESTADO_CERRADO;
         }
 
-        if((inout.Sa == FALSE) && (inout.Sc == FALSE)) // Si la puerta no está ni abierta ni cerrada
+        if((inout.Sa == FALSE) && (inout.Sc == FALSE))
         {
-            return ESTADO_INTERMEDIO;  // Se cambia al estado intermedio
+            return ESTADO_INTERMEDIO;
         }
     }
 }
-
-// Función para configurar el LED
 int Func_ESTADO_SETTINGLED(int St, int Inter)
 {
-    LedStatus.StatusLED = St;   // Se actualiza el estado del LED
-    LedStatus.InterLED = Inter; // Se actualiza la velocidad de intermitencia
-    return 0;
+	LedStatus.StatusLED = St;       //Estado del Led
+	LedStatus.InterLED = Inter;     //Velocidad de Intermitencia
+	return 0;
 }
 
-// Función de callback para el temporizador periódico
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    // Incrementar contador de tiempo
-    CntTimeCa++;
+	CntTimeCa++;
+		if(inout.Led == TRUE)
+		{
+			HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin, 1);
+		}
+		if(HAL_GPIO_ReadPin(Ba_GPIO_Port, Ba_Pin) == TRUE)
+			{
+				inout.Ba = TRUE;
+			}else
+			{
+				inout.Ba = FALSE;
+			}
+		if(HAL_GPIO_ReadPin(Bc_GPIO_Port, Bc_Pin) == TRUE)
+				{
+					inout.Bc = TRUE;
+				}else
+				{
+					inout.Bc = FALSE;
+				}
+		if(HAL_GPIO_ReadPin(Sa_GPIO_Port, Sa_Pin) == TRUE)
+				{
+					inout.Sa = TRUE;
+				}else
+				{
+					inout.Sa = FALSE;
+				}
+		if(HAL_GPIO_ReadPin(Sc_GPIO_Port, Sc_Pin) == TRUE)
+				{
+					inout.Sc = TRUE;
+				}else
+				{
+					inout.Sc = FALSE;
+				}
+		if(inout.Ma == TRUE)
+				{
+					HAL_GPIO_WritePin(Ma_GPIO_Port, Ma_Pin, 1);
+				}else
+				{
+					HAL_GPIO_WritePin(Ma_GPIO_Port, Ma_Pin, 0);
+				}
+		if(inout.Mc == TRUE)
+				{
+					HAL_GPIO_WritePin(Mc_GPIO_Port, Mc_Pin, 1);
+				}else
+				{
+					HAL_GPIO_WritePin(Mc_GPIO_Port, Mc_Pin, 0);
+				}
+		  static unsigned cont_LED = 0;       //Contador Led
+			    cont_LED++;
 
-    // Activar LED si está habilitado
-    if (inout.Led == TRUE)
-    {
-        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1);
-    }
+			    if(LedStatus.StatusLED == LED_ON)
+			    {
+			    	    		if(cont_LED >= LedStatus.InterLED)
+			    	    		{
+			    	    			if(HAL_GPIO_ReadPin(LD2_GPIO_Port,LD2_Pin) == LED_ON)
+			    	    			{
+			    	    				HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin, FALSE);
+			    	    			}
+			    	    			else
+			    	    			{
+			    	    				HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin, TRUE);
+			    	    			}
+			    	    			cont_LED = 0;
+			    	    		}
+			    	    	}
+			    	    else
+			    	    {
+			    	    	cont_LED = 0;
+			    	    	HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin, FALSE);
+			    	    }
 
-    // Leer estado de los botones y actualizar señales de control correspondientes
-    inout.Ba = HAL_GPIO_ReadPin(Ba_GPIO_Port, Ba_Pin);
-    inout.Bc = HAL_GPIO_ReadPin(Bc_GPIO_Port, Bc_Pin);
-    inout.Sa = HAL_GPIO_ReadPin(Sa_GPIO_Port, Sa_Pin);
-    inout.Sc = HAL_GPIO_ReadPin(Sc_GPIO_Port, Sc_Pin);
-
-    // Escribir en los pines de control de motores según su estado
-    if (inout.Ma == TRUE)
-    {
-        HAL_GPIO_WritePin(Ma_GPIO_Port, Ma_Pin, 1);
-    }
-    else
-    {
-        HAL_GPIO_WritePin(Ma_GPIO_Port, Ma_Pin, 0);
-    }
-
-    if (inout.Mc == TRUE)
-    {
-        HAL_GPIO_WritePin(Mc_GPIO_Port, Mc_Pin, 1);
-    }
-    else
-    {
-        HAL_GPIO_WritePin(Mc_GPIO_Port, Mc_Pin, 0);
-    }
 }
 /* USER CODE END 4 */
 
