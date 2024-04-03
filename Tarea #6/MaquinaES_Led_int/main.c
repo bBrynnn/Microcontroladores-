@@ -40,17 +40,17 @@
 #define ESTADO_CERRANDO     4
 #define ESTADO_INTERMEDIO   5
 #define ESTADO_INIT         6
-#define FALSE      		    0
+#define FALSE      	    0
 #define TRUE                1
 #define inTrue              0
 #define inFalse             1
 #define TIME_Ca             60
-#define LED_ON    			1
-#define LED_OFF   			0
-#define INTER_ON  			1  //Intermitente
-#define INTER_OFF 			0
-#define INTER_RAPIDO 		25 //Definicion del tiempo rapido multiplo de 10ms
-#define INTER_LENTO  		50 //Definicion del tiempo lento multiplo de 10ms
+#define LED_ON    	    1
+#define LED_OFF   	    0
+#define INTER_ON  	    1  //Intermitente
+#define INTER_OFF 	    0
+#define INTER_RAPIDO        25 //Definicion del tiempo rapido multiplo de 10ms
+#define INTER_LENTO  	    50 //Definicion del tiempo lento multiplo de 10ms
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -541,30 +541,34 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				{
 					HAL_GPIO_WritePin(Mc_GPIO_Port, Mc_Pin, 0);
 				}
-		  static unsigned cont_LED = 0;       //Contador Led
-			    cont_LED++;
+static unsigned cont_LED = 0; // Contador para el LED
 
-			    if(LedStatus.StatusLED == LED_ON)
-			    {
-			    	    		if(cont_LED >= LedStatus.InterLED)
-			    	    		{
-			    	    			if(HAL_GPIO_ReadPin(LD2_GPIO_Port, LD2_Pin) == LED_ON)
-			    	    			{
-			    	    				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, FALSE);
-			    	    			}
-			    	    			else
-			    	    			{
-			    	    				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, TRUE);
-			    	    			}
-			    	    			cont_LED = 0;
-			    	    		}
-			    	    	}
-			    	    else
-			    	    {
-			    	    	cont_LED = 0;
-			    	    	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, FALSE);
-			    	    }
+// Incrementa el contador de LED
+cont_LED++;
 
+// Verifica si el estado del LED es LED_ON
+if(LedStatus.StatusLED == LED_ON)
+{
+    // Verifica si el contador ha alcanzado el intervalo de intermitencia del LED
+    if(cont_LED >= LedStatus.InterLED)
+    {
+        // Verifica el estado actual del LED y lo cambia
+        if(HAL_GPIO_ReadPin(LD2_GPIO_Port, LD2_Pin) == LED_ON)
+        {
+            HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, FALSE); // Apaga el LED
+        }
+        else
+        {
+            HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, TRUE); // Enciende el LED
+        }
+        cont_LED = 0; // Reinicia el contador de LED
+    }
+}
+else
+{
+    // Reinicia el contador de LED y apaga el LED
+    cont_LED = 0;
+    HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, FALSE);
 }
 /* USER CODE END 4 */
 
