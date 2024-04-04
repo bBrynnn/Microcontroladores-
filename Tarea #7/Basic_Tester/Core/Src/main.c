@@ -20,7 +20,7 @@
 #define TRUE	  			1
 #define FALSE     			0
 #define MUESTRAS     		20         //Muestras a realizar
-#define CAL 				1.685      //Valor de Calibracion
+#define CAL 				1.687      //Valor de Calibracion
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -376,7 +376,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     static unsigned int cont_VOL = 0;
     static float Media = 0.0;
-    static float VOLTAJE = 0.0;
     static uint32_t MED_ADC = 0; // Medir ADC
 
     HAL_ADC_Start_IT(&hadc1);
@@ -384,15 +383,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
     if (cont_VOL >= MUESTRAS)
     {
-        Media = Media / MUESTRAS; // Dividir por MUESTRA en lugar de cont_VOL
+        Media = Media / cont_VOL; // Dividir por MUESTRA en lugar de cont_VOL
         Media = sqrtf(Media) * 0.0005;
-        VOLTAJE = Media * CAL;
+        float VOLTAJE_CALCULADO = Media * CAL; // Changed the name to avoid conflict
         cont_VOL = 0;
         Media = 0;
 
         // Convertir el valor de voltaje flotante a cadena
-        char VOLTAJE[10]; // Asumiendo la longitud máxima de la representación de cadena del voltaje
-        sprintf(VOLTAJE, "%.2f", VOLTAJE);
+        char VOLTAJE[20]; // Asumiendo la longitud máxima de la representación de cadena del voltaje
+        sprintf(VOLTAJE, "%.2f", VOLTAJE_CALCULADO);
 
         // Código para el LCD
         lcd_clear();
