@@ -45,9 +45,9 @@
 #define ESTADO_INTERMEDIO  	2
 #define MEDIDOR_ON  		1
 #define MEDIDOR_OFF  		0
-#define CAL 				1.625
-#define TRUE  				1
-#define FALSE 				0
+#define CAL 			1.625
+#define TRUE  			1
+#define FALSE 			0
 #define MUESTRA      		20
 /* USER CODE END PD */
 
